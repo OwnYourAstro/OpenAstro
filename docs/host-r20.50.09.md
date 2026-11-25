@@ -166,6 +166,23 @@ against `AT#FZAP=0` … `AT#FZAP=3` at `0x102221CC`, and feeds other commands to
 the debugger/service handlers. The service-report path at `0x1021EF36` prints
 `R20.50.09`; the serial/Flashcode report path starts around `0x1021F1F4`.
 
+### FlashZap entry path
+
+`AT#FZAP=0..3` is handled at `0x102221CC`; the actual handler is `0x10219834`.
+It reads the argument byte, writes the `"Boot"` marker through the pointer at
+`0x10456B9C`, sets the boot baud through `0x10456BA0`, sets
+`0x1200086A = 1`, and enters the reset path at `0x10231DC4`.
+
+| Command | Boot baud |
+| --- | ---: |
+| `AT#FZAP=0` | 57,600 (`0xE100`) |
+| `AT#FZAP=1` | 115,200 (`0x1C200`) |
+| `AT#FZAP=2` | 230,400 (`0x38400`) |
+| `AT#FZAP=3` | 460,800 (`0x70800`) |
+
+This is the host-side path that requests FlashZap/boot mode. It is separate from
+the earlier direct SBEP harness, which could not satisfy the bootloader handshake.
+
 The host contains the normal CPS-facing application, not just a bootloader:
 codeplug reorg strings, DSP messaging, radio model strings, scan/affiliation
 code, and FlashZap entry commands are all present.

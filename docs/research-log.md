@@ -132,3 +132,7 @@ in the git-ignored extracted tree.
   68-byte initial stack frames from an 8-byte task table (priority, stack size,
   entry point) referenced through `0x12000018`; `0x12000028` is the initial
   stack pointer and `0x12000014` the TCB base.
+
+- Traced `AT#FZAP=0..3` from the AT dispatcher (`0x102221CC`) to handler
+  `0x10219834`. It writes a `"Boot"` marker, selects 57.6/115.2/230.4/460.8
+  kbaud, sets `0x1200086A = 1`, and enters the reset path at `0x10231DC4`.
