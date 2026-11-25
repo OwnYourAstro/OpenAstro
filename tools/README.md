@@ -90,3 +90,8 @@ python tools/decrypt_cvn.py `
 Start Depot first, then run the command and open the package in Depot. Stop when
 Depot asks for the FLASHkey. The tool writes the XML only after the closing
 `</filePackage>` marker is observed. Extracted vendor images remain git-ignored.
+
+## FlashZap reset capture
+
+See `docs/flashzap-reset-capture.md` for the local read-only Boot Load/Unlock/
+Read Reset Capture procedure and the observed R17 reset-window result.

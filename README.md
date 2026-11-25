@@ -29,9 +29,10 @@ from, and what is still missing.
 | Hardware architecture | **Confirmed from the XTS 2500 Detailed Service Manual**: Patriot U800 dual-core MCU+DSP |
 | Host CPU ISA | **Verified for the FlashZap RAM downloader: Motorola M\*CORE** |
 | DSP ISA / peripherals | DSP memory/interfaces documented; exact DSP core/ISA still unknown |
-| Firmware images | **Extracted:** host RAPP `R20.50.09`, DSP2/DSPB `R19.50.01`, CFWI, PSDT, tuning |
-| Host firmware analysis | **Started:** reset/vector table, RTOS bootstrap, AT dispatcher, library routines |
-| Emulator | Not built; viable plan and building blocks identified |
+| Firmware images | **Extracted/decrypted:** host RAPP `R17.00.02` and `R20.50.09`, DSP2/DSPB `R17.00.02`/`R19.50.01`, CFWI, PSDT, tuning |
+| Host firmware analysis | **Started:** reset/vector table, RTOS bootstrap, task builder, AT dispatcher, library routines |
+| Emulator | **M\*CORE simulator built:** boots R17 host through RTOS init and application object setup; UI is blocked on boot-RAM/task-table state |
+| Firmware decryption | **Reusable tool added:** `tools/decrypt_cvn.py` captures Depot `CryptDecrypt` output without a FLASHkey or radio write |
 | Open firmware | Not built; toolchain and flash path partially identified |
 
 ## Key findings
@@ -84,13 +85,43 @@ docs/vendor/                  Locally archived service documentation (git-ignore
 tools/                        Small reproducible extraction/probing helpers
 ```
 
+## Current emulator status
+
+The R17.00.02 package matching the test radio is decrypted and extracted. The
+standalone M\*CORE simulator now executes the real R17 host image:
+
+- `tools/run-mcore-r17.cmd`
+- `firmware/extracted/host-boot-r17.elf` (local, git-ignored)
+- Host load `0x10210000`, end `0x10494A68`
+
+The R17 host reaches RTOS initialization and the application callback at
+`0x102183BC`, which creates object IDs `93`, `118`-`121`, and `30`. It still
+faults on pointers derived from uninitialized boot RAM before the LCD/UI path is
+drawn.
+
+The missing input is the boot-ROM-populated runtime state at `0x12000000`
+(task table, TCBs, and stacks). FlashZap exposes only the low reset window
+(`0x00000000-0x00002FFF`) and returns `UNKNOWN_ERROR (257)` for application RAM.
+Without a boot-ROM/RAM dump, the R17 application UI cannot be faithfully
+started from the host image alone.
+
+See `docs/host-r17.00.02.md` and `docs/flashzap-reset-capture.md`.
+
+## Tooling notes
+
+- `tools/decrypt_cvn.py` captures Depot's decrypted `filePackage` XML via Frida
+  without a FLASHkey and blocks radio serial writes.
+- `tools/flashzap/` is the local vendor FlashZap client; it is git-ignored.
+- The vendor firmware, extractor outputs, reset captures, and tool binaries are
+  kept local and are not redistributed.
+
 ## Highest-value next steps
 
-1. Extract or decrypt the `.cvn` host/DSP images.
-2. Recover the Patriot EIM **absolute base addresses** and boot-ROM behaviour
-   from the host image, boot code, or a logic capture.
-3. Build an M\*CORE CPU model and boot the Patriot RAM downloader in it.
-4. Model flash/SRAM, UART/USB, SPI/SSI, LCD, keypad, MAKO codec/power, and the
-   DSP interface using the service-manual pinouts.
-5. Decide the P25 voice-codec licensing path (DVSI IMBE/AMBE vs. receive-only
+1. Obtain a boot-ROM or application-RAM/task-table capture, or reconstruct the
+   boot-ROM task configuration from a matching ROM image.
+2. Continue static R17 analysis around the task builder (`0x102102F0`), timer
+   task config (`0x10210698`), and application callback (`0x102183BC`).
+3. Once the R17 task table is available, re-run the simulator through the LCD/UI
+   path before attempting any hello-world firmware.
+4. Decide the P25 voice-codec licensing path (DVSI IMBE/AMBE vs. receive-only
    experiments vs. an external Codec2 path).
