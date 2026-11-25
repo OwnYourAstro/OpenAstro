@@ -1,0 +1,22 @@
+AGENTS.md
+build/
+dist/
+target/
+out/
+node_modules/
+
+# Vendor binaries and documents are kept locally for interoperability research.
+# Never commit or redistribute them.
+firmware/xts2500/
+firmware/xts5000/
+firmware/tools/
+firmware/extracted/
+docs/vendor/
+*.cvn
+*.ish
+*.srec
+*.spm
+# Python and C++ build by-products
+__pycache__/
+*.pyc
+*.obj
