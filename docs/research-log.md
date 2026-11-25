@@ -136,3 +136,8 @@ in the git-ignored extracted tree.
 - Traced `AT#FZAP=0..3` from the AT dispatcher (`0x102221CC`) to handler
   `0x10219834`. It writes a `"Boot"` marker, selects 57.6/115.2/230.4/460.8
   kbaud, sets `0x1200086A = 1`, and enters the reset path at `0x10231DC4`.
+
+- The PSDT parser at `0x102260D8` gets its base from `0x12000770`, checks
+  `PHDR` at `+0xE000`, and walks `CPLG`/`SECP`/`TUNE` records at `PSDT+0x60`.
+  It calls ROM entry `0x1004F4`; early setup calls ROM `0x100104`. Those ROM
+  entries and the boot-filled `0x12000000` block are the missing runtime state.

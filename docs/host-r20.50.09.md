@@ -187,6 +187,26 @@ The host contains the normal CPS-facing application, not just a bootloader:
 codeplug reorg strings, DSP messaging, radio model strings, scan/affiliation
 code, and FlashZap entry commands are all present.
 
+## PSDT and boot-ROM interface
+
+The host does not parse PSDT entirely on its own. It calls low-ROM entries at
+`0x100104` and `0x1004F4` while initializing the platform data:
+
+- `0x102260C4` calls `0x100104` with no explicit arguments during early
+  platform setup.
+- `0x102260D8` is the PSDT parser. It reads a base pointer from `0x12000770`,
+  adds `0xE000`, checks the `PHDR` magic, walks records starting at
+  `PSDT + 0x60`, and copies sections through `0x1004F4`.
+- The PSDT sections at `0x1000E000` are `CPLG`, `SECP`, and `TUNE`.
+- Other observed low-ROM call targets include `0x100364`, `0x100548`,
+  `0x100742`, and `0x100790`.
+
+The task-table/RAM block at `0x12000000` is therefore not initialized by the
+RAPP image alone. A faithful emulator needs either a captured boot-RAM image or
+stub models for the ROM setup and task configuration.
+
+A machine-readable region/vector map is in [host-map.json](host-map.json).
+
 ## Memory-map evidence
 
 | Range | Use |

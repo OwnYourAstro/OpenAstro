@@ -1,0 +1,98 @@
+{
+  "source": "XTS2500 RAPP R20.50.09",
+  "cpu": "Motorola M*CORE",
+  "endian": "big",
+  "host_load": "0x10210000",
+  "host_end": "0x104B98BC",
+  "reset_vector": "0x10210210",
+  "exception_trampoline": "0x10210276",
+  "regions": [
+    {
+      "name": "boot_rom",
+      "start": "0x00000000",
+      "end": "0x000FFFFF",
+      "kind": "rom",
+      "contents_known": false
+    },
+    {
+      "name": "boot_stack",
+      "start": "0x00110000",
+      "end": "0x00110000",
+      "kind": "stack",
+      "contents_known": false
+    },
+    {
+      "name": "cfwi_mace_boot",
+      "start": "0x01600000",
+      "end": "0x0164B77E",
+      "kind": "firmware",
+      "contents_known": true
+    },
+    {
+      "name": "psdt",
+      "start": "0x1000E000",
+      "end": "0x1000E720",
+      "kind": "data",
+      "contents_known": true
+    },
+    {
+      "name": "dsp_code_red",
+      "start": "0x10080000",
+      "end": "0x100D0000",
+      "kind": "dsp",
+      "contents_known": true
+    },
+    {
+      "name": "host_rapp",
+      "start": "0x10210000",
+      "end": "0x104B98BC",
+      "kind": "code",
+      "contents_known": true
+    },
+    {
+      "name": "host_ram",
+      "start": "0x12000000",
+      "end": "0x12040000",
+      "kind": "ram",
+      "contents_known": false,
+      "note": "end is an inferred floor; boot ROM supplies the initial contents"
+    }
+  ],
+  "host_boot_globals": {
+    "0x12000014": "TCB base pointer",
+    "0x12000018": "initial task configuration table pointer",
+    "0x1200001C": "heap/block-list pointer",
+    "0x12000020": "pointer to task count",
+    "0x12000024": "initial task stack base",
+    "0x12000028": "initial stack pointer",
+    "0x12000070": "saved stack marker destination",
+    "0x12000094": "heap block table",
+    "0x12000098": "heap block table",
+    "0x12000770": "PSDT base pointer",
+    "0x1200BFE8": "application callback",
+    "0x1200BFEC": "application callback argument"
+  },
+  "observed_rom_entries": [
+    "0x100104",
+    "0x100364",
+    "0x1004F4",
+    "0x100548",
+    "0x100742",
+    "0x100790"
+  ],
+  "key_host_functions": {
+    "0x102102F0": "kernel/bootstrap path",
+    "0x102181E8": "timer/clock initialization",
+    "0x102182CA": "timer callback",
+    "0x102183BC": "application initialization callback",
+    "0x10218470": "reset wrapper",
+    "0x10219834": "AT#FZAP handler",
+    "0x10222140": "AT command dispatcher",
+    "0x102260D8": "PSDT parser",
+    "0x10231DC4": "reset path",
+    "0x10436084": "memcpy",
+    "0x10436128": "memset",
+    "0x10436188": "strcpy",
+    "0x104361C8": "strcmp"
+  }
+}
