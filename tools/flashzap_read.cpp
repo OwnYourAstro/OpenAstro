@@ -58,7 +58,7 @@ static void WriteSrec(const std::string& path, const std::vector<uint8_t>& data,
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        std::printf("usage: flashzap_read <flashzap-dir> <COMx> [out.srec] [start] [length]\n");
+        std::printf("usage: flashzap_read <flashzap-dir> <COMx> [out.srec] [start] [length] [baud]\n");
         return 2;
     }
     const std::string dir = argv[1];
@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
     const std::string out = argc >= 4 ? argv[3] : "flashzap-read.srec";
     const uint32_t start = argc >= 5 ? uint32_t(std::strtoul(argv[4], nullptr, 0)) : 0;
     const uint32_t length = argc >= 6 ? uint32_t(std::strtoul(argv[5], nullptr, 0)) : 0x400000;
+    const uint32_t baud = argc >= 7 ? uint32_t(std::strtoul(argv[6], nullptr, 0)) : 115200;
 
     SetDllDirectoryA(dir.c_str());
     HMODULE com = LoadLibraryA((dir + "\\fzap_com.dll").c_str());
@@ -83,6 +84,7 @@ int main(int argc, char** argv) {
     auto pilot = reinterpret_cast<Fn1>(Proc(worker, "?sendPilotSequence@FZAPworker@@QAEHXZ"));
     auto connect = reinterpret_cast<FnU16>(Proc(worker, "?connectToDevice@FZAPworker@@QAEHG@Z"));
     auto bootmode = reinterpret_cast<Fn1>(Proc(worker, "?enterBootmode@FZAPworker@@QAEHXZ"));
+    auto unlock = reinterpret_cast<Fn1>(Proc(worker, "?UnLock@FZAPworker@@QAEHXZ"));
     auto read = reinterpret_cast<FnRead>(Proc(worker, "?readMemory@FZAPworker@@QAEHPAEII@Z"));
     if (!rsCtor || !rsOpen || !rsBaud || !fzCtor || !fzInit || !pilot || !connect ||
         !bootmode || !read) {
@@ -97,7 +99,7 @@ int main(int argc, char** argv) {
     const int opened = rsOpen(portObj.data());
     std::printf("open(%s)=%d\n", portName.c_str(), opened);
     // FlashZap RS232Port::openPort uses 0 for success.
-    std::printf("baud=%d\n", rsBaud(portObj.data(), 115200));
+    std::printf("baud=%d\n", rsBaud(portObj.data(), baud));
 
     fzCtor(workerObj.data());
     const int init = fzInit(workerObj.data(), portObj.data());
@@ -107,6 +109,9 @@ int main(int argc, char** argv) {
     std::printf("pilot=%d\n", pilot(workerObj.data()));
     std::printf("connect=%d\n", connect(workerObj.data(), 0));
     std::printf("enterBootmode=%d\n", bootmode(workerObj.data()));
+    Sleep(1000);
+    std::printf("unlock=%d\n", unlock ? unlock(workerObj.data()) : -1);
+    Sleep(500);
 
     std::vector<uint8_t> image(length, 0);
     const uint32_t end = start + length - 1;
