@@ -31,7 +31,7 @@ from, and what is still missing.
 | DSP ISA / peripherals | DSP memory/interfaces documented; exact DSP core/ISA still unknown |
 | Firmware images | **Extracted/decrypted:** host RAPP `R17.00.02` and `R20.50.09`, DSP2/DSPB `R17.00.02`/`R19.50.01`, CFWI, PSDT, tuning |
 | Host firmware analysis | **Started:** reset/vector table, RTOS bootstrap, task builder, AT dispatcher, library routines |
-| Emulator | **M\*CORE simulator built:** boots R17 host through RTOS init and application object setup; UI is blocked on boot-RAM/task-table state |
+| Emulator | **M\*CORE simulator built:** boots R17 host through RTOS init, application callback, and the 87-entry task table; stock UI is blocked on missing low-ROM/application-RAM state |
 | Firmware decryption | **Reusable tool added:** `tools/decrypt_cvn.py` captures Depot `CryptDecrypt` output without a FLASHkey or radio write |
 | Open firmware | Not built; toolchain and flash path partially identified |
 
@@ -75,12 +75,14 @@ docs/hardware.md              Radio, board, memory, USB, RF, crypto hardware
 docs/firmware.md              Image formats, FlashZap, M*CORE, .cvn analysis
 docs/protocol-and-codeplug.md AT/PPP/RCMP, .cpg, tuning, partitions
 docs/emulator-plan.md         Emulator design, phased plan, risks
+docs/EMULATOR_STATUS.md       Current emulator status, evidence, and blocker
 docs/open-firmware-plan.md    Custom firmware design, toolchain, flash path
 docs/gaps.md                  Prioritised missing knowledge
 docs/sources.md               Provenance, URLs, hashes, verification ledger
 docs/research-log.md          Chronology of this research session
 docs/service-manual-search.md Service-manual search status (living document)
 firmware/                     Locally archived vendor firmware (git-ignored)
+firmware/hello/               First custom RAM payload (source only)
 docs/vendor/                  Locally archived service documentation (git-ignored)
 tools/                        Small reproducible extraction/probing helpers
 ```
@@ -94,18 +96,22 @@ standalone M\*CORE simulator now executes the real R17 host image:
 - `firmware/extracted/host-boot-r17.elf` (local, git-ignored)
 - Host load `0x10210000`, end `0x10494A68`
 
-The R17 host reaches RTOS initialization and the application callback at
-`0x102183BC`, which creates object IDs `93`, `118`-`121`, and `30`. It still
-faults on pointers derived from uninitialized boot RAM before the LCD/UI path is
-drawn.
+The R17 host reaches RTOS initialization, the application callback at
+`0x102183BC`, and the scheduler/idle loop without faulting. The callback builds
+an object lookup table at `0x1201EA58` with IDs `93`, `118`-`121`, and `30`.
 
-The missing input is the boot-ROM-populated runtime state at `0x12000000`
-(task table, TCBs, and stacks). FlashZap exposes only the low reset window
-(`0x00000000-0x00002FFF`) and returns `UNKNOWN_ERROR (257)` for application RAM.
-Without a boot-ROM/RAM dump, the R17 application UI cannot be faithfully
-started from the host image alone.
+The boot code also builds the real **87-entry runtime task table** at
+`0x1201E3D0`. Task 86 is the application callback; tasks 30-33 share entry
+`0x103B9334`. The UI framework uses a 30-entry object table at `0x12020730`
+(stride `0x10C`), but that table is empty in the simulator.
 
-See `docs/host-r17.00.02.md` and `docs/flashzap-reset-capture.md`.
+The UI object constructor is at `0x103B4604`; attempts to run its callers reach
+`PC 0x0` with `r15=0`, a missing low-ROM call. The LCD therefore receives only
+initialization/command traffic. The RAPP image schedules the UI tasks but does
+not provide the low-ROM object/display state they require.
+
+See `docs/EMULATOR_STATUS.md` for the current state and
+`docs/host-r17.00.02.md` for the address map.
 
 ## Tooling notes
 
@@ -117,11 +123,11 @@ See `docs/host-r17.00.02.md` and `docs/flashzap-reset-capture.md`.
 
 ## Highest-value next steps
 
-1. Obtain a boot-ROM or application-RAM/task-table capture, or reconstruct the
-   boot-ROM task configuration from a matching ROM image.
-2. Continue static R17 analysis around the task builder (`0x102102F0`), timer
-   task config (`0x10210698`), and application callback (`0x102183BC`).
-3. Once the R17 task table is available, re-run the simulator through the LCD/UI
-   path before attempting any hello-world firmware.
+1. Obtain a boot-ROM image, or a small application-RAM capture around
+   `0x12000000`/`0x12020730`; this is the shortest path to the stock UI.
+2. If no capture is available, reconstruct the low-ROM object/display contract
+   and populate `0x12020730` with synthetic UI objects.
+3. Re-run the full task table and verify LCD/UI output before attempting any
+   hello-world firmware.
 4. Decide the P25 voice-codec licensing path (DVSI IMBE/AMBE vs. receive-only
    experiments vs. an external Codec2 path).

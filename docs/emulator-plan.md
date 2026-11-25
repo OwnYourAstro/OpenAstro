@@ -1,5 +1,8 @@
 # XTS 2500 emulator plan
 
+Current runtime status, observations, and the missing boot-ROM/application-RAM
+state are recorded in [EMULATOR_STATUS.md](EMULATOR_STATUS.md).
+
 There are two useful emulator products. Build them separately.
 
 ## A. Protocol/device emulator (achievable now)

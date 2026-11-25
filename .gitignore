@@ -22,3 +22,8 @@ __pycache__/
 *.obj
 tools/flashzap/
 
+
+# OpenAstro hello build products
+firmware/hello/*.o
+firmware/hello/*.elf
+firmware/hello/*.bin

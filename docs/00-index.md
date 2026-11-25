@@ -25,8 +25,9 @@ corroborated by captures, real binaries, or real hardware.
    to a running radio, and the codeplug/tuning format.
 4. [emulator-plan.md](emulator-plan.md) — how to run the firmware.
 5. [open-firmware-plan.md](open-firmware-plan.md) — how to replace it.
-6. [gaps.md](gaps.md) — what is still missing, in priority order.
-7. [sources.md](sources.md) — provenance, hashes, and links.
+6. [EMULATOR_STATUS.md](EMULATOR_STATUS.md) - current emulator state and blocker.
+7. [gaps.md](gaps.md) — what is still missing, in priority order.
+8. [sources.md](sources.md) — provenance, hashes, and links.
 
 ## Related repositories
 
