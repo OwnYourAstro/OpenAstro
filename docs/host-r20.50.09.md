@@ -81,6 +81,50 @@ timer setup at `0x102181E8`, then invokes the installed callback at
 `0x1201F1E8`, pre-populating IDs `30`, `93`, and `118`–`121`. It then returns to
 the kernel path. This is the application-level initialization stage.
 
+### RTOS task construction (inferred from `0x102102F0`)
+
+The kernel bootstrap reads the initial task table through pointers in the
+`0x12000000` block. The observed loop builds tasks in 32-byte control blocks
+and creates a 68-byte initial stack frame for each one.
+
+| Global | Observed use |
+| --- | --- |
+| `0x12000014` | Task-control-block base pointer |
+| `0x12000018` | Initial task configuration table pointer |
+| `0x1200001C` | Heap/block-list pointer |
+| `0x12000020` | Pointer to the task count |
+| `0x12000024` | Initial task stack base |
+| `0x12000028` | Initial stack pointer loaded before the C runtime starts |
+| `0x12000070` | Saved stack marker destination |
+| `0x12000094` / `0x12000098` | Heap block tables |
+
+Each configuration entry appears to be 8 bytes:
+
+```text
++0  byte   task priority
++2  half   stack size
++4  word   task entry point
+```
+
+The builder writes the task state, priority, stack pointer, and list links into
+the 32-byte control block, then puts the initial `PSR` and entry point into the
+68-byte stack frame. After the loop, the kernel invokes the application callback
+at `0x1200BFE8`.
+
+### Scheduling primitives (candidate labels)
+
+| Address | Observed behaviour |
+| --- | --- |
+| `0x10210410` | Updates TCB links/state and conditionally updates `SS3` |
+| `0x10210466` | Inserts a TCB into an ordered list keyed by a 32-bit value |
+| `0x102104AC` | Restores `PSR`/`EPC` from the saved frame and executes `rte` |
+| `0x102104C8` | Reads `0x12000088`, updates counters, and calls the dispatcher |
+| `0x102104D0` | Saves current state and walks the timer/list structure |
+| `0x10210276` | Exception trampoline; saves `EPC`/`EPSR` and enters `0x102181A4` |
+
+These are not yet named with authority. They are the first addresses to trace
+when building a scheduler model.
+
 ## Confirmed library routines
 
 | Address | Function | Evidence |

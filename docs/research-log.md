@@ -127,3 +127,8 @@ Confirmed:
 
 Details are in `docs/host-r20.50.09.md`. The local `host.dis` and `.elf` remain
 in the git-ignored extracted tree.
+
+- Kernel bootstrap `0x102102F0` constructs 32-byte task control blocks and
+  68-byte initial stack frames from an 8-byte task table (priority, stack size,
+  entry point) referenced through `0x12000018`; `0x12000028` is the initial
+  stack pointer and `0x12000014` the TCB base.
