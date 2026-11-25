@@ -74,3 +74,19 @@ python3 tools/extract_file_package.py \
 It writes one file per unique `(fileName, fileVersion, destination)` and an
 `extracted_manifest.tsv` with sizes and SHA-256 values. Extracted vendor images
 remain git-ignored. Use `tools/srec2bin.py` afterward to flatten S-records.
+## decrypt_cvn.py
+
+Capture Depot's decrypted `filePackage` XML without a FLASHkey and without
+writing to the radio. The tool attaches Frida to a running `PatPortDepot.exe`,
+blocks writes to `COM*`, and collects the `CryptDecrypt` output while the user
+opens the `.cvn` and starts the firmware update flow.
+
+```powershell
+python tools/decrypt_cvn.py `
+  --cvn OpenAstro\firmware\xts2500\XTS2500_DVN4228W.cvn `
+  --out OpenAstro\firmware\extracted\XTS2500_R17.00.02.decrypted.xml
+```
+
+Start Depot first, then run the command and open the package in Depot. Stop when
+Depot asks for the FLASHkey. The tool writes the XML only after the closing
+`</filePackage>` marker is observed. Extracted vendor images remain git-ignored.
