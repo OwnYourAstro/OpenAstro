@@ -39,6 +39,24 @@ not a working radio emulator yet.
   the previous fault and emits initialization/command LCD traffic, but no UI
   pixels.
 
+## Live-image integration
+
+The current radio dump was merged into a new simulator image:
+
+- full RAPP `0x10210000..0x10494A67`, matching the R17 package byte-for-byte
+- PSDT `0x1000E000..0x1000E71F`, matching the package
+- tuning `0x10002000..0x10007FFF`
+- DSP `0x10080000..0x100CFFFF`
+- reset window `0x00000000..0x00002FFF`
+- real `0x00100000..0x0010FFFF` bootflash code from the radio
+
+Artifact: `firmware/extracted/host-boot-r17-romreal.elf`
+Runner: `tools/run-mcore-r17-real.cmd`
+
+The integrated image reaches the same scheduler/timer wait loop and issues LCD
+initialization/command traffic, but still does not enter the UI draw path. The
+real bootflash code did not resolve the missing object/display state.
+
 ## Current blocker
 
 The RAPP image schedules the UI tasks but does not contain the low-ROM object

@@ -95,3 +95,10 @@ Depot asks for the FLASHkey. The tool writes the XML only after the closing
 
 See `docs/flashzap-reset-capture.md` for the local read-only Boot Load/Unlock/
 Read Reset Capture procedure and the observed R17 reset-window result.
+
+## Integrated R17 simulator image
+
+`tools/run-mcore-r17-real.cmd` runs the locally merged image with the current
+RAPP, PSDT, tuning, DSP, reset-window, and bootflash data. The generated ELF is
+`firmware/extracted/host-boot-r17-romreal.elf` and remains local. Rebuild it from
+the local dump with `tools/make-r17-real.ps1`.
